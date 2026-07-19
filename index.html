@@ -1,0 +1,1171 @@
+<meta charset="utf-8">
+<title>HALF-LIFE: FULL-TIME — A Valve Quest</title>
+<style>
+  :root{
+    --bg:#0b0f14;--steam-navy:#1b2838;--steam-dark:#171a21;--panel:#2a475e;--panel-2:#213243;
+    --blue:#66c0f4;--blue-dim:#417a9b;--green:#a1cd44;--green-dark:#5c7e10;
+    --ink:#c7d5e0;--ink-dim:#8f98a0;--danger:#e05a4f;--gold:#f0c04a;
+    --mono:'SFMono-Regular',ui-monospace,'DejaVu Sans Mono',Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  .wrap{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:18px;
+    background:radial-gradient(1200px 600px at 50% -10%, #223349 0%, transparent 60%),linear-gradient(180deg,#0b0f14 0%, #06080b 100%);
+    color:var(--ink);font-family:var(--sans);}
+  .brandline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;letter-spacing:.28em;text-transform:uppercase;font-size:12px;color:var(--ink-dim);}
+  .brandline b{color:var(--blue);font-weight:700}
+  .stage{position:relative;width:min(96vw,900px);aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:#000;
+    box-shadow:0 0 0 1px #0d141c, 0 0 0 6px #10161d, 0 30px 80px -30px #000, 0 0 60px -20px #1e6ea8;outline:none;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;}
+  .overlay{position:absolute;inset:0;display:none;flex-direction:column;}
+  .overlay.show{display:flex}
+  #title{align-items:center;justify-content:center;text-align:center;background:radial-gradient(900px 500px at 50% 30%, rgba(30,60,90,.6), rgba(5,8,11,.94));padding:24px;gap:6px;}
+  #title .logo{font-family:var(--sans);font-weight:800;letter-spacing:.04em;line-height:.92;font-size:clamp(34px,8vw,72px);color:#fff;text-shadow:0 3px 0 #0a3350, 0 0 30px rgba(102,192,244,.5);}
+  #title .logo span{color:var(--blue)}
+  #title .sub{color:var(--ink-dim);letter-spacing:.32em;text-transform:uppercase;font-size:clamp(10px,1.7vw,13px);margin-top:6px}
+  #title .card{margin-top:18px;max-width:520px;background:rgba(23,26,33,.7);border:1px solid #2a3b4d;border-radius:8px;padding:16px 18px;font-size:14px;line-height:1.6;color:var(--ink);}
+  #title .card b{color:var(--blue)}
+  .btn{cursor:pointer;border:none;border-radius:4px;font-family:var(--sans);font-weight:700;letter-spacing:.02em;padding:12px 26px;font-size:15px;color:#0e2a16;
+    background:linear-gradient(180deg,#c3ec5a,#8fb733);box-shadow:0 2px 0 #4f6d14, 0 8px 20px -8px #a1cd44;transition:transform .08s ease, filter .12s ease;}
+  .btn:hover{filter:brightness(1.06)}.btn:active{transform:translateY(1px)}
+  .btn.blue{color:#03121c;background:linear-gradient(180deg,#8fd0f5,#3f92c4);box-shadow:0 2px 0 #1c4d6b}
+  .btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px #35506a;padding:10px 18px;font-weight:600}
+  .keys{margin-top:16px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;color:var(--ink-dim);font-size:12px}
+  .kbd{display:inline-block;min-width:22px;text-align:center;padding:3px 7px;border-radius:4px;background:#1c2733;border:1px solid #33475a;color:var(--ink);font-family:var(--mono);font-size:12px}
+  #hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:row;justify-content:space-between;align-items:flex-start;padding:10px 12px;}
+  .pill{pointer-events:none;background:rgba(11,15,20,.72);border:1px solid #33475a;border-radius:20px;padding:6px 13px;font-size:12px;color:var(--ink);backdrop-filter:blur(3px);max-width:64%}
+  .pill .lbl{color:var(--blue);text-transform:uppercase;letter-spacing:.14em;font-size:9px;display:block;margin-bottom:1px}
+  #hud .right{display:flex;gap:8px;align-items:center}
+  .hbtn{pointer-events:auto;cursor:pointer;background:rgba(11,15,20,.72);border:1px solid #33475a;color:var(--ink);border-radius:6px;width:30px;height:30px;font-size:14px;display:grid;place-items:center}
+  .hbtn:hover{border-color:var(--blue);color:var(--blue)}
+  #dialogue{justify-content:flex-end;pointer-events:none;padding:0 12px 12px}
+  .dbox{pointer-events:auto;background:linear-gradient(180deg,rgba(23,32,44,.97),rgba(15,22,30,.98));border:1px solid #39607e;border-radius:10px;padding:14px 16px 16px;box-shadow:0 14px 40px -12px #000, inset 0 0 0 1px rgba(102,192,244,.08);cursor:pointer}
+  .dname{color:var(--blue);font-weight:800;letter-spacing:.04em;font-size:13px;margin-bottom:5px;text-transform:uppercase}
+  .dtext{font-size:15px;line-height:1.55;min-height:2.9em;color:#e6eef5}
+  .dmore{margin-top:8px;text-align:right;font-size:11px;color:var(--ink-dim);letter-spacing:.06em}
+  .dmore .kbd{font-size:10px;padding:2px 6px}
+  #battle{background:radial-gradient(700px 500px at 50% 0%, rgba(35,70,100,.6), rgba(6,10,14,.97));padding:14px;gap:10px;justify-content:space-between}
+  .bars{display:flex;flex-direction:column;gap:8px}
+  .bar{background:rgba(11,15,20,.7);border:1px solid #33475a;border-radius:8px;padding:8px 10px}
+  .bar .top{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+  .bar .name{color:#e6eef5;font-weight:700}.bar .val{font-family:var(--mono);color:var(--ink-dim)}
+  .track{height:12px;border-radius:6px;background:#0c141c;overflow:hidden;border:1px solid #10202c}
+  .fill{height:100%;width:100%;border-radius:6px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .fill.gabe{background:linear-gradient(90deg,#e05a4f,#f0c04a)}.fill.me{background:linear-gradient(90deg,#3f92c4,#8fd0f5)}
+  .arena{flex:1;display:flex;align-items:center;justify-content:center;gap:18px;min-height:0}
+  .qbox{background:rgba(23,32,44,.94);border:1px solid #39607e;border-radius:10px;padding:12px 14px}
+  .qtext{font-size:14px;line-height:1.5;color:#e6eef5;margin-bottom:10px;font-weight:600}
+  .answers{display:flex;flex-direction:column;gap:7px}
+  .ans{cursor:pointer;text-align:left;background:rgba(33,50,67,.7);border:1px solid #33475a;color:var(--ink);border-radius:7px;padding:9px 11px;font-size:13px;line-height:1.4;transition:.12s;display:flex;gap:9px}
+  .ans:hover{border-color:var(--blue);background:rgba(45,71,94,.9);color:#fff}
+  .ans .n{color:var(--blue);font-family:var(--mono);font-weight:700}
+  .bfeed{font-size:13px;line-height:1.5;color:var(--gold);min-height:1.4em;text-align:center;padding:0 6px}
+  #profile{background:rgba(6,10,14,.96);padding:0;overflow:auto}
+  .prof-inner{width:100%;max-width:760px;margin:0 auto;padding:18px}
+  .prof-head{display:flex;gap:16px;align-items:center;background:linear-gradient(120deg,#1b2838,#2a475e);border:1px solid #39607e;border-radius:10px;padding:16px}
+  .avatar{width:78px;height:78px;border-radius:6px;flex:none;image-rendering:pixelated;box-shadow:0 0 0 2px #66c0f4}
+  .prof-head h2{margin:0 0 3px;font-size:22px;color:#fff}
+  .prof-head .role{color:var(--blue);font-size:13px;letter-spacing:.06em}
+  .prof-head .status{margin-top:6px;font-size:12px;color:var(--green)}
+  .prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media(max-width:560px){.prof-grid{grid-template-columns:1fr}}
+  .pcard{background:rgba(23,32,44,.8);border:1px solid #2a3b4d;border-radius:9px;padding:13px 15px}
+  .pcard h3{margin:0 0 9px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue)}
+  .pcard ul{margin:0;padding-left:16px;font-size:13px;line-height:1.6}.pcard li{margin-bottom:4px}
+  .xp{margin-bottom:10px}.xp .t{font-weight:700;color:#e6eef5;font-size:13px}.xp .m{color:var(--ink-dim);font-size:11px;margin:1px 0 3px}.xp .d{font-size:12px;line-height:1.5}
+  .skillrow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+  .skilltrack{height:7px;background:#0c141c;border-radius:4px;border:1px solid #10202c;overflow:hidden;margin-top:3px}
+  .skillfill{height:100%;background:linear-gradient(90deg,#3f92c4,#66c0f4);border-radius:4px}
+  .prof-foot{text-align:center;margin-top:14px}
+  #end{align-items:center;justify-content:center;text-align:center;padding:24px;background:radial-gradient(900px 600px at 50% 20%, rgba(40,90,60,.5), rgba(5,8,11,.97));gap:8px}
+  #end h1{font-size:clamp(26px,6vw,44px);margin:0;color:#fff;text-shadow:0 0 30px rgba(161,205,68,.5)}
+  #end .lead{color:var(--green);letter-spacing:.16em;text-transform:uppercase;font-size:13px}
+  #end .quote{max-width:520px;font-size:15px;line-height:1.6;color:var(--ink);background:rgba(23,26,33,.7);border:1px solid #2a3b4d;border-radius:8px;padding:16px 18px;margin-top:6px}
+  #end .quote b{color:var(--blue)}
+  #end .cta{margin-top:16px;display:flex;flex-direction:column;align-items:center;gap:11px;background:rgba(23,32,44,.8);border:1px solid #39607e;border-radius:12px;padding:16px 20px;max-width:540px;box-shadow:0 12px 40px -16px #000}
+  #end .cta .line{font-weight:800;color:#fff;font-size:16px;letter-spacing:.01em}
+  #end .cta .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  a.btn{text-decoration:none;display:inline-flex;align-items:center;gap:7px}
+  a.btn:hover{filter:brightness(1.06)}
+  #vs{background:#05070a;align-items:center;justify-content:center;overflow:hidden}
+  #vs .vs-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:1}
+  #vs.go .vs-flash{animation:vsflash 2.2s ease-out both}
+  @keyframes vsflash{0%{opacity:1}9%{opacity:0}86%{opacity:0}100%{opacity:1}}
+  .vs-diag{position:absolute;inset:-20% -40%;background:repeating-linear-gradient(115deg, rgba(102,192,244,.05) 0 22px, transparent 22px 44px);z-index:0}
+  #vs.go .vs-diag{animation:vsslide 2.2s linear both}
+  @keyframes vsslide{from{transform:translateX(0)}to{transform:translateX(88px)}}
+  .vs-row{display:flex;align-items:center;gap:16vw;width:100%;justify-content:center;position:relative;z-index:2}
+  .vs-side{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .vs-sprite{width:104px;height:104px;image-rendering:pixelated;filter:drop-shadow(0 8px 12px rgba(0,0,0,.6))}
+  .vs-name{font-weight:800;letter-spacing:.05em;color:#fff;font-size:15px;text-transform:uppercase;text-align:center}
+  .vs-title{font-size:10px;color:var(--gold);letter-spacing:.14em;text-transform:uppercase}
+  .vs-side.left .vs-name{color:var(--blue)}
+  .vs-challenge{margin-top:64px;text-align:center;font-weight:800;line-height:1.25;z-index:3;font-size:clamp(18px,3.8vw,30px);color:#fff;max-width:80%;text-wrap:balance;text-shadow:0 0 22px rgba(102,192,244,.45),0 2px 10px rgba(0,0,0,.6)}
+  .vs-challenge b{color:var(--blue)}
+  #vs.go .vs-side.left{animation:slideL .6s cubic-bezier(.2,.9,.2,1) both}
+  #vs.go .vs-side.right{animation:slideR .6s cubic-bezier(.2,.9,.2,1) both}
+  #vs.go .vs-challenge{animation:vschal .5s .5s cubic-bezier(.2,1.5,.4,1) both}
+  @keyframes slideL{0%{transform:translateX(-170%);opacity:0}100%{transform:translateX(0);opacity:1}}
+  @keyframes slideR{0%{transform:translateX(170%);opacity:0}100%{transform:translateX(0);opacity:1}}
+  @keyframes vschal{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .13s ease;z-index:60}
+  @media (prefers-reduced-motion:reduce){#vs.go .vs-side.left,#vs.go .vs-side.right,#vs.go .vs-challenge,#vs.go .vs-flash,#vs.go .vs-diag{animation-duration:.01ms !important}}
+  #touch{position:absolute;inset:0;pointer-events:none;display:none;flex-direction:row;justify-content:space-between;align-items:flex-end;padding:14px}
+  #touch.show{display:flex}
+  .dpad{pointer-events:auto;display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px;opacity:.85}
+  .dpad button{background:rgba(20,30,40,.8);border:1px solid #33475a;color:var(--blue);border-radius:8px;font-size:16px}
+  .dpad .up{grid-area:1/2}.dpad .left{grid-area:2/1}.dpad .right{grid-area:2/3}.dpad .down{grid-area:3/2}
+  .abtn{pointer-events:auto;align-self:flex-end;width:66px;height:66px;border-radius:50%;background:linear-gradient(180deg,#c3ec5a,#8fb733);border:none;color:#0e2a16;font-weight:800;font-size:16px;box-shadow:0 3px 0 #4f6d14}
+  .foot{color:var(--ink-dim);font-size:12px;text-align:center;max-width:640px;line-height:1.5}
+  .foot b{color:var(--blue)}
+</style>
+
+<div class="wrap">
+  <div class="brandline"><b>◄ HALF-LIFE: FULL-TIME ►</b> &nbsp;·&nbsp; a Valve quest — an interactive résumé for Business Development</div>
+
+  <div class="stage" id="stage" tabindex="0">
+    <canvas id="c" width="480" height="320"></canvas>
+
+    <div class="overlay show" id="hud">
+      <div class="pill"><span class="lbl" id="hud-loc">Bedroom</span><span id="hud-obj">Wake up. You have an interview.</span></div>
+      <div class="right">
+        <button class="hbtn" id="muteBtn" title="Sound">♪</button>
+        <button class="hbtn" id="mapBtn" title="Where am I">?</button>
+      </div>
+    </div>
+
+    <div class="overlay show" id="title">
+      <div class="logo">HALF-LIFE:<br><span>FULL-TIME</span></div>
+      <div class="sub">A Valve Quest · Press Start</div>
+      <div class="card">
+        You've landed an interview for <b>Business Development at Valve</b>. Wake up, get ready,
+        bike across town to Steam HQ, work your way up to the third floor — and convince
+        <b>Gabe Newell</b> himself that you're the one for the job.
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn" id="startBtn">▶ START GAME</button>
+      </div>
+      <div class="keys">
+        <span><span class="kbd">W A S D</span> / <span class="kbd">↑ ↓ ← →</span> move</span>
+        <span><span class="kbd">Space</span> / <span class="kbd">E</span> interact</span>
+      </div>
+    </div>
+
+    <div class="overlay" id="dialogue">
+      <div class="dbox" id="dbox">
+        <div class="dname" id="dname">NAME</div>
+        <div class="dtext" id="dtext"></div>
+        <div class="dmore" id="dmore"><span class="kbd">Space</span> continue ▸</div>
+      </div>
+    </div>
+
+    <div class="overlay" id="battle">
+      <div class="bars">
+        <div class="bar">
+          <div class="top"><span class="name">GABE — SKEPTICISM</span><span class="val" id="gabeVal">100 / 100</span></div>
+          <div class="track"><div class="fill gabe" id="gabeFill"></div></div>
+        </div>
+      </div>
+      <div class="arena">
+        <div class="qbox" style="max-width:640px;width:100%">
+          <div class="qtext" id="qtext">…</div>
+          <div class="answers" id="answers"></div>
+          <div class="bfeed" id="bfeed"></div>
+        </div>
+      </div>
+      <div class="bars">
+        <div class="bar">
+          <div class="top"><span class="name">YOU — CONFIDENCE</span><span class="val" id="confVal">100 / 100</span></div>
+          <div class="track"><div class="fill me" id="confFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="profile">
+      <div class="prof-inner">
+        <div class="prof-head">
+          <canvas class="avatar" id="avatarCanvas" width="32" height="32"></canvas>
+          <div>
+            <h2 id="pf-name">Your Name</h2>
+            <div class="role" id="pf-role">Business Development Candidate</div>
+            <div class="status">● Online — currently: interviewing at Valve</div>
+          </div>
+        </div>
+        <div class="prof-grid" id="pf-grid"></div>
+        <div class="prof-foot"><button class="btn blue" id="closeProfile">◀ Back to game</button></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="end">
+      <div class="lead">◆ Quest Complete ◆</div>
+      <h1>You got the job.</h1>
+      <div class="quote" id="endQuote"></div>
+      <div class="cta" id="endCTA"></div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn ghost" id="viewResume">View my Steam profile</button>
+        <button class="btn ghost" id="playAgain">Play again</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="vs">
+      <div class="vs-diag"></div>
+      <div class="vs-flash"></div>
+      <div class="vs-row">
+        <div class="vs-side left">
+          <canvas class="vs-sprite" id="vsPlayer" width="64" height="64"></canvas>
+          <div class="vs-name" id="vsPlayerName">YOU</div>
+          <div class="vs-title">The Challenger</div>
+        </div>
+        <div class="vs-side right">
+          <canvas class="vs-sprite" id="vsGabe" width="64" height="64"></canvas>
+          <div class="vs-name">Gabe Newell</div>
+          <div class="vs-title">Steam · Final Boss</div>
+        </div>
+      </div>
+      <div class="vs-challenge"><b>Gabe</b> has challenged you to an interview!</div>
+    </div>
+
+    <div id="flash"></div>
+
+    <div class="overlay" id="touch">
+      <div class="dpad">
+        <button class="up" data-k="ArrowUp">▲</button>
+        <button class="left" data-k="ArrowLeft">◀</button>
+        <button class="right" data-k="ArrowRight">▶</button>
+        <button class="down" data-k="ArrowDown">▼</button>
+      </div>
+      <button class="abtn" data-k=" ">A</button>
+    </div>
+  </div>
+
+  <div class="foot">
+    Built as a playable résumé. <b>Devs:</b> all personal content lives in the <b>RESUME</b> object at the top of the code.
+    Check your PC in the bedroom to see the profile in-game.
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   ✏️  EDIT ME — your résumé lives here.
+   ========================================================================= */
+const RESUME = {
+  name: "Mitchel Hanchett",
+  role: "Steam Partner Ecosystem · Platform BD & Pipeline Development",
+  look: { skin:"#e8b88f", hair:"#141414", shirt:"#2f6fb0", pants:"#26313a", hat:"#161616" },
+  contact: [
+    "hanchettmitch@gmail.com",
+    "206-914-4549",
+    "Seattle, WA · Bellevue commutable"
+  ],
+  skills: [
+    { name:"Pipeline Building & Outbound", lvl:92 },
+    { name:"Deal Closing & Partnership Dev", lvl:90 },
+    { name:"GTM Strategy & Execution", lvl:88 },
+    { name:"Partner Program Design", lvl:87 },
+    { name:"Contract Negotiation", lvl:85 },
+    { name:"Market Research (60+ markets)", lvl:90 }
+  ],
+  experience: [
+    { t:"Koalaified — Co-Founder & Partner Ecosystem Lead", m:"2026 – Present", d:"Designed and built the partner program from scratch at an early-stage AI-networking startup — defined the partner model, wrote the onboarding playbooks, and recruited the first cohort with no infrastructure to inherit. Grew the platform to ~120 users and closed its first paying customer (an HR buyer), owning the deal end-to-end. Solo IC and the internal voice of partners to product and engineering." },
+    { t:"SWFI — Finance Research Analyst & BD Coordinator", m:"2018 – 2021", d:"Ran full-cycle BD across 400+ global organizations — pitching sovereign wealth funds and institutional investors (ADIA, SkyBridge, AustralianSuper) and closing $250K+ in revenue on a ~$15K institutional subscription. Produced institutional-grade research across 60+ jurisdictions and led global outreach for the SWFI Summit." },
+    { t:"GPU Farm — Contract Operator", m:"2021 – 2024", d:"Negotiated vendor terms and owned SLA compliance and uptime for large-scale GPU compute infrastructure." },
+    { t:"Independent Proprietary Trader & Analyst", m:"2021 – Present", d:"Systematic multi-strategy trading across equities, fixed income, and alternatives over a 4-year track record; advise founders and allocators; featured speaker on tech X Spaces, with active coverage across AI and enterprise software." }
+  ],
+  education: [
+    "MBA — Project Management & Economics · Northwest University · 2019 · GPA 3.8",
+    "BA — Digital Media Marketing · University of Washington · 2017",
+    "Coursework — Law, Economics & Public Policy · UW",
+    "AA · Cascadia College · 2014"
+  ],
+  why: [
+    "Every Steam sale I hunt for the mid-priced games I didn't know I wanted — and usually give up before I find them. That catalog-discovery gap, where a lot of partner value sits, is the problem I'd pull toward on day one.",
+    "How I work: notice friction as a player → size it with data → act on it through partners.",
+    "Active across dozens of gaming Discords (and help moderate one) — I spot this kind of friction before it ever shows up in a dashboard.",
+    "Valve's flat, IC-led structure is where I do my best work — I find the work, do the work, and hold myself to the result."
+  ]
+};
+
+/* =========================================================================
+   ENGINE
+   ========================================================================= */
+const TILE=32, VW=480, VH=320;
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+const el=id=>document.getElementById(id);
+const stage=el('stage');
+
+let state='title';       // title | play | cutscene | vs | dialogue | battle | profile | end
+let exBubble=null;
+let portalFX=null;       // portal-gun ejection cutscene {t,done}
+const keys={};
+const flags={ pcChecked:false, dressed:false, intel:0, defeated:false };
+
+/* ---------- audio: chiptune engine ---------- */
+let muted=false, actx=null, musicGain=null;
+function ensureAudio(){
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(actx.state==='suspended'){ try{ actx.resume(); }catch(e){} }
+  if(!musicGain){ musicGain=actx.createGain(); musicGain.gain.value=muted?0:0.5; musicGain.connect(actx.destination); }
+  return actx;
+}
+function beep(freq=440,dur=0.06,type='square',vol=0.05){
+  if(muted||!ensureAudio()) return;
+  try{ const o=actx.createOscillator(), g=actx.createGain();
+    o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+    g.gain.value=vol;g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+dur);
+    o.start();o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+const SEMI={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
+function noteFreq(name){ if(name==='R') return 0; const oct=+name.slice(-1), key=name.slice(0,-1); const midi=(oct+1)*12+SEMI[key]; return 440*Math.pow(2,(midi-69)/12); }
+function playNote(freq,t,dur,wave,vol){
+  if(freq<=0||!actx) return;
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type=wave; o.frequency.value=freq; o.connect(g); g.connect(musicGain);
+  const atk=0.006, rel=Math.min(0.09,dur*0.35);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+atk);
+  g.gain.setValueAtTime(vol,t+Math.max(atk,dur-rel)); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.start(t); o.stop(t+dur+0.03);
+}
+function playDrum(t,type){
+  if(!actx) return;
+  if(type==='kick'){ const o=actx.createOscillator(), g=actx.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(140,t); o.frequency.exponentialRampToValueAtTime(45,t+0.11);
+    g.gain.setValueAtTime(0.42,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.14);
+    o.connect(g); g.connect(musicGain); o.start(t); o.stop(t+0.16);
+  } else { const len=Math.floor(actx.sampleRate*0.045);
+    const b=actx.createBuffer(1,len,actx.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.5);
+    const s=actx.createBufferSource(); s.buffer=b;
+    const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=6500;
+    const g=actx.createGain(); g.gain.value=0.10;
+    s.connect(hp); hp.connect(g); g.connect(musicGain); s.start(t);
+  }
+}
+function bassBars(bars){ const s=[]; bars.forEach(([a,b])=>{ s.push([a,.5],[b,.5],[a,.5],[b,.5]); }); return s; }
+const mel =(seq,vol=0.16,wave='square')=>({kind:'tone',wave,vol,seq});
+const bass=(bars,vol=0.22,wave='triangle')=>({kind:'tone',wave,vol,seq:bassBars(bars)});
+const drums=(seq)=>({kind:'drum',seq});
+const TRACKS={
+  town:{ bpm:112, ch:[
+    mel([['G4',.5],['C5',.5],['E5',.5],['C5',.5],['G4',.5],['B4',.5],['D5',.5],['B4',.5],['A4',.5],['C5',.5],['E5',.5],['C5',.5],['A4',.5],['C5',.5],['F5',.5],['C5',.5],['E5',.5],['G5',.5],['E5',.5],['C5',.5],['D5',.5],['G5',.5],['D5',.5],['B4',.5],['C5',.5],['E5',.5],['A5',.5],['E5',.5],['F5',1],['E5',.5],['D5',.5]]),
+    bass([['C3','G3'],['G2','D3'],['A2','E3'],['F2','C3'],['C3','G3'],['G2','D3'],['A2','E3'],['F2','C3']])]},
+  route:{ bpm:150, ch:[
+    mel([['D5',.5],['G5',.5],['A5',.5],['B5',.5],['B5',.5],['A5',.5],['G5',.5],['E5',.5],['E5',.5],['G5',.5],['C6',.5],['G5',.5],['F#5',.5],['A5',.5],['D6',.5],['A5',.5],['B5',.5],['G5',.5],['D5',.5],['G5',.5],['E5',.5],['G5',.5],['B5',.5],['G5',.5],['C6',.5],['B5',.5],['A5',.5],['G5',.5],['A5',.5],['F#5',.5],['D5',1]],0.15),
+    bass([['G2','D3'],['E2','B2'],['C3','G3'],['D3','A3'],['G2','D3'],['E2','B2'],['C3','G3'],['D3','A3']],0.2),
+    drums([['K',.5],['H',.5],['H',.5],['H',.5]])]},
+  hq:{ bpm:120, ch:[
+    mel([['A4',1],['D5',.5],['F5',.5],['D5',1],['F5',.5],['D5',.5],['C5',1],['A4',.5],['C5',.5],['E5',1],['G5',.5],['E5',.5],['F5',.5],['A5',.5],['F5',.5],['D5',.5],['F5',.5],['D5',.5],['A#4',.5],['D5',.5],['A4',.5],['C5',.5],['F5',.5],['C5',.5],['E5',1],['G4',1]],0.14),
+    bass([['D3','A3'],['A#2','F3'],['F2','C3'],['C3','G3'],['D3','A3'],['A#2','F3'],['F2','C3'],['C3','G3']],0.2)]},
+  battle:{ bpm:162, ch:[
+    mel([['A4',.25],['A4',.25],['C5',.5],['E5',.5],['A5',.5],['G5',.5],['F5',.5],['E5',.5],['C5',.5],['D5',.5],['G5',.5],['B5',.5],['G5',.5],['E5',.5],['G#5',.5],['B5',.5],['E6',.5],['A5',.5],['E5',.5],['C5',.5],['A4',.5],['C5',.5],['F5',.5],['A5',.5],['F5',.5],['B5',.5],['G5',.5],['D5',.5],['B4',.5],['E5',1],['E5',.5],['R',.5]],0.16),
+    bass([['A2','E3'],['F2','C3'],['G2','D3'],['E2','B2'],['A2','E3'],['F2','C3'],['G2','D3'],['E2','B2']],0.2,'square'),
+    drums([['K',.5],['H',.5],['K',.5],['H',.5]])]},
+  victory:{ bpm:140, loop:false, ch:[
+    mel([['G4',.2],['C5',.2],['E5',.2],['G5',.2],['C6',.6],['R',.1],['G5',.2],['C6',1.2]],0.18),
+    bass([['C3','G3'],['C3','G3']],0.2)]}
+};
+let music={name:null,playing:false,tr:null,spb:0,chans:[],timer:null};
+function startMusic(name){
+  if(!ensureAudio()) return;
+  if(music.name===name && music.playing) return;
+  stopMusic();
+  const tr=TRACKS[name]; if(!tr) return;
+  music.name=name; music.playing=true; music.tr=tr; music.spb=60/tr.bpm;
+  const t0=actx.currentTime+0.12;
+  music.chans=tr.ch.map(c=>({c,idx:0,time:t0}));
+  music.timer=setInterval(schedTick,25); schedTick();
+}
+function stopMusic(){ music.playing=false; if(music.timer) clearInterval(music.timer); music.timer=null; }
+function schedTick(){
+  if(!music.playing||!actx) return;
+  const ahead=actx.currentTime+0.2;
+  music.chans.forEach(ch=>{
+    while(ch.time<ahead){
+      const step=ch.c.seq[ch.idx], dur=step[1]*music.spb;
+      if(ch.c.kind==='drum'){ if(step[0]==='K')playDrum(ch.time,'kick'); else if(step[0]==='H')playDrum(ch.time,'hat'); }
+      else playNote(noteFreq(step[0]),ch.time,dur,ch.c.wave,ch.c.vol);
+      ch.time+=dur; ch.idx++;
+      if(ch.idx>=ch.c.seq.length){ if(music.tr.loop===false){ ch.time=Infinity; } else ch.idx=0; }
+    }
+  });
+}
+function musicForMap(m){ return m==='bedroom'?'town':m==='street'?'route':'hq'; }
+
+/* ---------- palettes / themes ---------- */
+const PLAYER = { ...RESUME.look };
+const PJ     = { skin:RESUME.look.skin, hair:RESUME.look.hair, shirt:"#4a5e7a", pants:"#33475a", hat:RESUME.look.hat };
+const THEMES = {
+  bedroom:{ floorA:"#3d3a54", floorB:"#443f5e", wall:"#26243a", wallTop:"#34314a", accent:"#8e4b6b" },
+  street: { floorA:"#3a3f47", floorB:"#33383f", wall:"#23272e", wallTop:"#31363e", accent:"#66c0f4" },
+  hq:     { floorA:"#1b2838", floorB:"#213243", wall:"#0e1620", wallTop:"#1c2c3c", accent:"#66c0f4" }
+};
+const SOLID = new Set(['#','p','w','b','=','~','n','H','t','*','B','|','k','o','M','L','X','Q','U','A','F','W','N','Y','i','v','j','m']);
+
+/* ---------- map helpers ---------- */
+function makeGrid(w,h){ const g=[]; for(let y=0;y<h;y++){ let row=[]; for(let x=0;x<w;x++){ row.push((x===0||y===0||x===w-1||y===h-1)?'#':'.'); } g.push(row);} return g; }
+function place(g,ch,coords){ coords.forEach(([x,y])=>{ if(g[y]&&g[y][x]!==undefined) g[y][x]=ch; }); }
+function npc(x,y,pal,name,lines,onEnd){
+  return {x,y,homeX:x,homeY:y,px:x*TILE+16,py:y*TILE+16,dir:'down',moving:false,frame:0,wait:40+Math.random()*140,rtx:x,rty:y,pal,name,lines,onEnd,type:'person'};
+}
+function gabeNPC(x,y){ return {x,y,homeX:x,homeY:y,px:x*TILE+16,py:y*TILE+16,dir:'down',fixed:true,moving:false,frame:0,name:"Gabe Newell",type:'gabe',
+  lines:["...So you're the one who biked all the way here.","Most people send a résumé. You built a whole game.","I'm the last interview you'll face today. Convince me."], onEnd:startBattle }; }
+
+/* ---------- BEDROOM ---------- */
+function buildBedroom(){
+  const g=makeGrid(15,10);
+  place(g,'p',[[3,1],[4,1]]); place(g,'r',[[3,2],[4,2]]);
+  place(g,'b',[[10,1],[11,1],[10,2],[11,2]]);
+  place(g,'w',[[2,4],[2,5]]);
+  place(g,'c',[[6,6],[7,6],[6,7],[7,7]]);
+  place(g,'~',[[13,7]]);
+  g[9][7]='d';
+  return { id:'bedroom', theme:THEMES.bedroom, grid:g, npcs:[],
+    doors:[ {x:7,y:9,to:'street',sx:1,sy:5,dir:'right',
+      guard:()=> !flags.dressed ? "You're still in your pajamas. Get dressed first — you can't interview at Valve like this."
+               : (!flags.pcChecked ? "Wait — check your PC. Better double-check the interview details." : null)} ],
+    interacts:{
+      '3,1':()=>openProfile(),'4,1':()=>openProfile(),
+      '2,4':()=>getDressed(),'2,5':()=>getDressed(),
+      '10,1':bedTalk,'11,1':bedTalk,'10,2':bedTalk,'11,2':bedTalk,
+      '13,7':()=>say("A plant","It's a little dry. Focus — you have somewhere to be.") }
+  };
+}
+function bedTalk(){ say("Your bed","So warm. So comfortable. So NOT going to help you land a job at Valve. Up you get."); }
+
+/* ---------- STREET ---------- */
+function buildStreet(){
+  const g=makeGrid(40,10);
+  // one continuous road the whole way — the dashed centre is your bike lane
+  for(let x=1;x<=37;x++){ g[4][x]='R'; g[5][x]='y'; g[6][x]='R'; }
+  // --- your neighborhood (left) ---
+  place(g,'j',[[1,2],[2,2]]);                          // your house
+  [5,8,11,14,17].forEach(x=>g[2][x]='j');              // neighbors' houses (top)
+  [4,7,10,13,16].forEach(x=>g[2][x]='~');              // hedges between them
+  [3,6,9,12,15].forEach(x=>g[3][x]='m');               // curbside mailboxes
+  [3,6,9,12,15,18].forEach(x=>g[8][x]='j');            // houses (bottom)
+  [4,7,10,13,16].forEach(x=>g[7][x]='~');              // lawn trees (bottom)
+  // --- downtown Bellevue (right) — glass towers rise as you arrive ---
+  for(let x=23;x<=38;x++){ g[1][x]='Y'; g[2][x]='Y'; g[8][x]='Y'; }
+  for(let yy=4; yy<=6; yy++){ g[yy][27]='x'; g[yy][33]='x'; }   // crosswalks
+  [[24,3],[30,3],[36,3],[26,7],[32,7]].forEach(([x,y])=>g[y][x]='i'); // streetlights
+  [[25,4],[35,4],[29,6]].forEach(([x,y])=>g[y][x]='v');          // parked cars
+  // Steam HQ at the end of the block
+  for(let x=37;x<=38;x++) for(let y=1;y<=8;y++) g[y][x]='Y';
+  g[5][37]='d';
+  return { id:'street', theme:THEMES.street, grid:g, bike:true,
+    npcs:[
+      npc(8,3,{skin:"#d9a06a",hair:"#3a2a1a",shirt:"#6f6a3a",pants:"#4a462a",hat:"#6a6438"},"The Soldier",
+        ["MAGGOT! ...ahem. Good MORNING, recruit!","Follow the road DOWN the block into the city — Steam HQ is that way. MOVE MOVE MOVE!","...and God-speed on your interview, son. HOO-RAH!"]),
+      npc(5,7,{skin:"#c98d5a",hair:"#111",shirt:"#c23b3b",pants:"#222"},"Dog Walker",
+        ["Morning! Nice bike.","Just follow the road out of the neighborhood — it takes you straight downtown to the Steam building.","Good luck in there!"]),
+      npc(24,7,{skin:"#e8c19a",hair:"#5a3b1a",shirt:"#2f8f5f",pants:"#333"},"Indie Dev",
+        ["Welcome to downtown! I just shipped my game on Steam.","Wishlists, a Next Fest demo, launch discount — the visibility algorithm did the rest.","If you work there... be good to us little studios, yeah?"]),
+      npc(30,7,{skin:"#d9a06a",hair:"#222",shirt:"#3f5fb0",pants:"#2a2a2a"},"Coffee Vendor",
+        ["Espresso before an interview? Bold.","Bellevue's finest, on the house. Go get that offer."])
+    ],
+    doors:[ {x:37,y:5,to:'lobby',sx:7,sy:8,dir:'up'} ],
+    interacts:{
+      '2,2':()=>say("Home","Home sweet home. You locked up, grabbed your bike, and rolled out. No turning back now."),
+      '9,8':()=>say("A neighbor's house","Their sprinkler judges your life choices. You ride on."),
+      '29,2':()=>say("Downtown Bellevue","Glass towers and tech money — and Steam HQ right at the end of the block.") }
+  };
+}
+
+/* ---------- LOBBY (gaming-company lobby) ---------- */
+function buildLobby(){
+  const g=makeGrid(15,10);
+  place(g,'N',[[7,0]]);                 // neon Steam sign on top wall
+  place(g,'=',[[3,2],[4,2],[5,2]]);      // reception counter
+  place(g,'H',[[9,2]]);                  // headcrab jar
+  place(g,'A',[[11,2],[12,2]]);          // arcade cabinets
+  place(g,'F',[[2,6],[3,6],[11,6],[12,6]]); // couches
+  place(g,'~',[[1,8],[13,8],[1,1]]);     // plants
+  place(g,'|',[[13,3]]);                 // banner
+  g[1][13]='s';                          // stairs up
+  g[9][7]='d';                           // door to street
+  return { id:'lobby', theme:THEMES.hq, grid:g,
+    npcs:[
+      npc(4,1,{skin:"#d6c2a8",hair:"#2b2b2b",shirt:"#39485a",pants:"#28323e"},"The G-Man",
+        ["Mr. Hanchett... right on time.","Sign in. Head up when you are... prepared. The offer is on the third floor.","Do try to understand the *platform*. Gabe... appreciates that. *checks pocket watch*"]),
+      npc(6,7,{skin:"#d99a6a",hair:"#d99a6a",shirt:"#a83a35",pants:"#2a2a2a"},"The Heavy",
+        ["Refunds. Reviews. Regional pricing. THIRTY currencies. Steam handles ALL of it.","Is good platform. Cry some more, tiny competitor!","...that is the value a partner gets. Remember upstairs, little BD man."]),
+      npc(9,7,{skin:"#c98d5a",hair:"#20160f",shirt:"#d5622a",pants:"#c65a26"},"Chell",
+        ["...","(She heard you built a whole *game* just to apply. She nods, slowly, approvingly.)","(She points you toward the stairs, then gives a quiet thumbs up. She's rooting for you.)"]),
+      npc(3,4,{skin:"#c68a5a",hair:"#4a3320",shirt:"#c99a5a",pants:"#8a6a3a",hat:"#e0a92a",glasses:true},"The Engineer",
+        ["We don't do managers 'round here, partner. You pick what you work on.","In BizDev? You'd own your deals end to end. Nobody hands you a blueprint.","Now if you'll 'scuse me — gotta go build somethin'."]),
+      npc(11,4,{skin:"#e8c19a",hair:"#3a2a1a",shirt:"#5885a2",pants:"#39485a",hat:"#5885a2"},"The Scout",
+        ["BOINK! Oh — you're the interview guy. Nice.","Half-Life 3? Ha! I know NOTHIN'. I'm a runner, not a talker. ...okay I talk a lot.","Upstairs on the BD floor, find the quiet fella with the glasses. Trust me, pal."])
+    ],
+    doors:[
+      {x:13,y:1,to:'floor2',sx:2,sy:8,dir:'up'},
+      {x:7,y:9,to:'street',sx:35,sy:5,dir:'left'} ],
+    interacts:{
+      '9,2':()=>say("Specimen jar","A headcrab. Preserved. Someone taped a note: 'DO NOT PET.' You do not pet it."),
+      '11,2':()=>say("Arcade cabinet","It's a cabinet running an old Valve classic. High score belongs to 'GABEN'. Of course it does."),
+      '12,2':()=>say("Arcade cabinet","INSERT COIN. You have no coins. You have an interview instead."),
+      '7,0':()=>say("Neon sign","The Steam logo hums in blue neon over the lobby. You're really here."),
+      '2,6':()=>say("Couch","Plush. Comfortable. A dangerous place to sit before an interview."),
+      '13,3':()=>say("Banner","'THE STEAM SUMMER SALE IS COMING.' It is always coming.") }
+  };
+}
+
+/* ---------- FLOOR 2 (dev floor) ---------- */
+function buildFloor2(){
+  const g=makeGrid(15,10);
+  place(g,'W',[[6,0]]);                     // whiteboard
+  place(g,'=',[[2,2],[6,2],[10,2]]);        // desk pods (open-plan)
+  place(g,'A',[[1,7]]);                     // arcade
+  place(g,'t',[[13,7]]);                    // coffee & cake station
+  place(g,'~',[[13,4]]);                    // plant
+  g[9][1]='s';   // stairs down
+  g[1][13]='s';  // stairs up
+  return { id:'floor2', theme:THEMES.hq, grid:g,
+    npcs:[
+      npc(7,2,{skin:"#e0b48f",hair:"#3a2a1a",shirt:"#2a475e",pants:"#1b2838"},"Tom Giardino",
+        ["Welcome — you must be here for the Business Development interview.","Good luck up there. Just be yourself."]),
+      npc(3,4,{skin:"#d9a06a",hair:"#2b2b2b",shirt:"#5c7e10",pants:"#26313a"},"Adam Klaff",
+        ["Hey, welcome to the floor.","Good luck with the interview — you'll do great."]),
+      npc(11,4,{skin:"#e8c19a",hair:"#5a3b1a",shirt:"#417a9b",pants:"#222"},"Connor Malone",
+        ["Good to meet you.","Gabe's upstairs when you're ready. You've got this."]),
+      npc(5,6,{skin:"#c98d5a",hair:"#141414",shirt:"#3f5fb0",pants:"#2a2a2a"},"DJ Powers",
+        ["Hey there.","Great to have you visiting the floor. Good luck up there."]),
+      npc(9,6,{skin:"#e0b48f",hair:"#3a2a1a",shirt:"#2f8f5f",pants:"#26313a"},"Nathaniel Blue",
+        ["Welcome to the floor!","Nice bike, by the way. Go get 'em."]),
+      npc(3,7,{skin:"#e8c19a",hair:"#20160f",shirt:"#8e4b6b",pants:"#26313a"},"Ria Hu",
+        ["Hi — good to see a new face.","Rooting for you in there!"]),
+      npc(11,7,{skin:"#d9a06a",hair:"#20160f",shirt:"#3f92c4",pants:"#222"},"Shreya Liu",
+        ["Hey.","Deep breath — you've got this."]),
+      npc(7,4,{skin:"#e0b48f",hair:"#5a3b1a",shirt:"#e0621a",pants:"#b34e12",glasses:true,beard:true},"Gordon F. ★",
+        ["*Gordon says nothing. He never does. He hands you a crumpled sticky note.*",
+         "The note reads: 'Gabe tests whether you GET the platform. Never promise front-page featuring.'",
+         "'Visibility is earned — wishlists, demos, launch timing. On the 30% cut, sell the value.'",
+         "*He gives a silent thumbs up and adjusts his glasses.*"],
+        ()=>{ flags.intel++; })
+    ],
+    doors:[
+      {x:1,y:9,to:'lobby',sx:13,sy:2,dir:'down'},
+      {x:13,y:1,to:'floor3',sx:7,sy:8,dir:'up'} ],
+    interacts:{
+      '6,0':()=>say("Whiteboard","Partner pipeline stages, launch dates, and — squint — '½·6' with a doodle of a crowbar."),
+      '13,7':()=>say("Coffee & cake","Free espresso and, yes, cake. The cake here is NOT a lie today."),
+      '1,7':()=>say("Arcade cabinet","Someone modded it to run a build nobody will confirm exists.") }
+  };
+}
+
+/* ---------- FLOOR 3 (Gabe's boss room) ---------- */
+function buildFloor3(){
+  const g=makeGrid(15,10);
+  place(g,'L',[[2,1],[12,1]]);              // Half-Life lambda banners
+  place(g,'M',[[4,2],[10,2]]);              // PC towers flanking Gabe
+  place(g,'=',[[5,3],[6,3],[8,3],[9,3]]);   // battlestation desks
+  place(g,'*',[[2,3],[12,3]]);              // trophies
+  place(g,'X',[[13,4]]);                    // crowbar plaque
+  place(g,'H',[[1,4]]);                     // headcrab jar
+  place(g,'Q',[[3,6]]);                     // Portal companion cube
+  place(g,'U',[[11,6]]);                    // Portal turret
+  place(g,'O',[[7,5],[7,6]]);               // portals (runway to boss)
+  place(g,'~',[[1,8],[13,8]]);
+  g[9][7]='s';                              // stairs down
+  return { id:'floor3', theme:THEMES.hq, grid:g,
+    npcs:[ gabeNPC(7,2) ],
+    doors:[ {x:7,y:9,to:'floor2',sx:13,sy:2,dir:'down'} ],
+    interacts:{
+      '2,1':()=>say("Lambda banner","The Half-Life λ, backlit in orange. It watches over the whole floor."),
+      '12,1':()=>say("Lambda banner","Another λ. Someone really wants you thinking about a certain sequel."),
+      '4,2':()=>say("PC tower","Gabe's rig. Liquid-cooled, blindingly RGB, humming like a small aircraft."),
+      '2,3':()=>say("Trophy case","Game of the Year awards, as far as the eye can see."),
+      '12,3':()=>say("Trophy case","A shelf of golden gnomes. You do not ask about the gnomes."),
+      '13,4':()=>say("Mounted crowbar","A crowbar under glass. A plaque reads: 'IN CASE OF HEADCRABS.'"),
+      '1,4':()=>say("Specimen jar","A headcrab, gently pulsing. It seems to recognize the crowbar across the room."),
+      '3,6':()=>say("Companion Cube","The Weighted Companion Cube. It has never threatened to stab you. Be nice to it."),
+      '11,6':()=>say("Sentry Turret","A little white turret swivels toward you. 'Are you still there?' Nope. Nope nope."),
+      '7,5':()=>say("Portal","A shimmering blue-and-orange portal on the floor. You decide NOT to test where it goes."),
+      '7,6':()=>say("Portal","The other end of the portal. Probably. Physics here is a suggestion.") }
+  };
+}
+
+const MAPS = {};
+function rebuildMaps(){
+  MAPS.bedroom=buildBedroom(); MAPS.street=buildStreet();
+  MAPS.lobby=buildLobby(); MAPS.floor2=buildFloor2(); MAPS.floor3=buildFloor3();
+}
+rebuildMaps();
+
+/* ---------- player / camera ---------- */
+const player={ x:7*TILE+16, y:3*TILE+16, dir:'down', moving:false, frame:0, map:'bedroom', pal:PJ };
+let cam={x:0,y:0};
+const OBJ={ bedroom:"Wake up. You have an interview.", street:"Ride out of the neighborhood, into the city ▶", lobby:"Find your way up to the 3rd floor.", floor2:"Meet the Steam Business team — and get Gordon's intel.", floor3:"Meet Gabe. This is the interview." };
+const LOC={ bedroom:"Bedroom", street:"On the way to Steam HQ", lobby:"Steam HQ · Lobby", floor2:"Steam HQ · Business Development", floor3:"Steam HQ · Floor 3" };
+function updateHUD(){ el('hud-loc').textContent=LOC[player.map]; el('hud-obj').textContent=OBJ[player.map]; }
+function curMap(){ return MAPS[player.map]; }
+
+/* ---------- collision ---------- */
+function tileAt(px,py){ const g=curMap().grid, tx=Math.floor(px/TILE), ty=Math.floor(py/TILE); if(ty<0||tx<0||ty>=g.length||tx>=g[0].length) return '#'; return g[ty][tx]; }
+function npcAtTile(m,x,y){ return m.npcs.find(o=>Math.floor(o.px/TILE)===x && Math.floor(o.py/TILE)===y); }
+function solidPixel(px,py){
+  if(SOLID.has(tileAt(px,py))) return true;
+  const tx=Math.floor(px/TILE), ty=Math.floor(py/TILE);
+  return curMap().npcs.some(n=>{ const ntx=Math.floor(n.px/TILE), nty=Math.floor(n.py/TILE); return (ntx===tx&&nty===ty)||(n.moving&&n.rtx===tx&&n.rty===ty); });
+}
+function canMove(nx,ny){ const hw=9, top=ny-4, bot=ny+12; return !(solidPixel(nx-hw,top)||solidPixel(nx+hw,top)||solidPixel(nx-hw,bot)||solidPixel(nx+hw,bot)); }
+
+/* ---------- NPC wandering ---------- */
+function npcCanStep(self,nx,ny){
+  const m=curMap(), g=m.grid;
+  if(ny<1||nx<1||ny>=g.length-1||nx>=g[0].length-1) return false;
+  const ch=g[ny][nx];
+  if(SOLID.has(ch)||ch==='d'||ch==='s') return false;
+  if(Math.abs(nx-self.homeX)>3||Math.abs(ny-self.homeY)>3) return false;
+  const ptx=Math.floor(player.x/TILE), pty=Math.floor(player.y/TILE);
+  if(ptx===nx&&pty===ny) return false;
+  for(const o of m.npcs){ if(o===self) continue; const otx=Math.floor(o.px/TILE), oty=Math.floor(o.py/TILE); if((otx===nx&&oty===ny)||(o.rtx===nx&&o.rty===ny)) return false; }
+  return true;
+}
+function updateNPCs(){
+  const m=curMap();
+  m.npcs.forEach(n=>{
+    if(n.fixed) return;
+    if(n.moving){
+      const tx=n.rtx*TILE+16, ty=n.rty*TILE+16;
+      const dx=Math.sign(tx-n.px), dy=Math.sign(ty-n.py);
+      n.px+=dx*0.8; n.py+=dy*0.8; n.frame+=0.16;
+      if(Math.abs(tx-n.px)<1 && Math.abs(ty-n.py)<1){ n.px=tx; n.py=ty; n.moving=false; n.frame=0; n.wait=40+Math.random()*160; }
+    } else {
+      n.wait--;
+      if(n.wait<=0){
+        if(Math.random()<0.35){ n.wait=30+Math.random()*70; return; } // sometimes just idle
+        const opts=[['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]];
+        const p=opts[Math.floor(Math.random()*4)]; n.dir=p[0];
+        const nx=Math.floor(n.px/TILE)+p[1], ny=Math.floor(n.py/TILE)+p[2];
+        if(npcCanStep(n,nx,ny)){ n.rtx=nx; n.rty=ny; n.moving=true; } else { n.wait=15+Math.random()*35; }
+      }
+    }
+  });
+}
+
+/* ---------- movement ---------- */
+function update(){
+  if(state!=='play'){ return; }
+  updateNPCs();
+  const speed=curMap().bike?3.5:1.7;
+  let dx=0,dy=0;
+  if(keys['ArrowLeft']||keys['a']) dx=-1;
+  else if(keys['ArrowRight']||keys['d']) dx=1;
+  else if(keys['ArrowUp']||keys['w']) dy=-1;
+  else if(keys['ArrowDown']||keys['s']) dy=1;
+  player.moving=!!(dx||dy);
+  if(dx<0)player.dir='left'; else if(dx>0)player.dir='right'; else if(dy<0)player.dir='up'; else if(dy>0)player.dir='down';
+  if(dx&&canMove(player.x+dx*speed,player.y)) player.x+=dx*speed;
+  if(dy&&canMove(player.x,player.y+dy*speed)) player.y+=dy*speed;
+  if(player.moving) player.frame+=0.22; else player.frame=0;
+  const tx=Math.floor(player.x/TILE), ty=Math.floor(player.y/TILE);
+  const door=curMap().doors.find(d=>d.x===tx&&d.y===ty);
+  if(door){ const msg=door.guard?door.guard():null;
+    if(msg){ player.y-=6; say("...",msg); beep(180,.1,'sawtooth'); } else { transition(door); } }
+  const mw=curMap().grid[0].length*TILE, mh=curMap().grid.length*TILE;
+  cam.x=Math.max(0,Math.min(mw-VW, player.x-VW/2));
+  cam.y=Math.max(0,Math.min(mh-VH, player.y-VH/2));
+}
+let transitioning=false;
+function transition(door){
+  if(transitioning) return; transitioning=true;
+  fade(()=>{ player.map=door.to; player.x=door.sx*TILE+16; player.y=door.sy*TILE+16; player.dir=door.dir||'down';
+    if(door.to==='street') player.pal=PLAYER; updateHUD(); startMusic(musicForMap(door.to)); beep(520,.08,'square'); },
+  ()=>{ transitioning=false; });
+}
+let fadeAlpha=0, fadePhase=null, fadeMid=null, fadeEnd=null;
+function fade(midCb,endCb){ fadePhase='out'; fadeMid=midCb; fadeEnd=endCb; }
+function stepFade(){
+  if(!fadePhase) return;
+  if(fadePhase==='out'){ fadeAlpha+=0.08; if(fadeAlpha>=1){ fadeAlpha=1; fadeMid&&fadeMid(); fadePhase='in'; } }
+  else { fadeAlpha-=0.08; if(fadeAlpha<=0){ fadeAlpha=0; fadePhase=null; fadeEnd&&fadeEnd(); } }
+}
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+function draw(){
+  const m=curMap(), th=m.theme, g=m.grid;
+  ctx.clearRect(0,0,VW,VH);
+  ctx.fillStyle=th.floorA; ctx.fillRect(0,0,VW,VH);
+  const x0=Math.floor(cam.x/TILE), y0=Math.floor(cam.y/TILE);
+  const x1=Math.min(g[0].length, x0+VW/TILE+2), y1=Math.min(g.length, y0+VH/TILE+2);
+  for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){
+    const ch=g[y][x], px=x*TILE-cam.x, py=y*TILE-cam.y;
+    drawFloor(px,py,x,y,th);
+    if(ch!=='.'&&ch!=='#') drawTile(ch,px,py,th,x,y);
+    if(ch==='#') drawWall(px,py,x,y,th,g);
+  }
+  const ents=m.npcs.map(n=>({y:n.py,draw:()=>drawEntity(n)}));
+  if(!portalFX) ents.push({y:player.y,draw:drawPlayer});   // player is being yeeted; drawn separately
+  ents.sort((a,b)=>a.y-b.y).forEach(e=>e.draw());
+  drawHint(m);
+  drawPortalFX();
+  if(exBubble){ if(performance.now()>exBubble.until) exBubble=null;
+    else { const sx=exBubble.x*TILE+16-cam.x, sy=exBubble.y*TILE-cam.y-2;
+      r(sx-8,sy-20,16,15,'#fff'); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(sx-4,sy-6); ctx.lineTo(sx+4,sy-6); ctx.lineTo(sx,sy); ctx.fill();
+      ctx.fillStyle='#e05a4f'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center'; ctx.fillText('!',sx,sy-8); ctx.textAlign='left'; } }
+  if(fadeAlpha>0){ ctx.fillStyle=`rgba(4,6,9,${fadeAlpha})`; ctx.fillRect(0,0,VW,VH); }
+}
+function lerpHex(h1,h2,t){ const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; const A=p(h1),B=p(h2),c=i=>Math.round(A[i]+(B[i]-A[i])*t); return `rgb(${c(0)},${c(1)},${c(2)})`; }
+function drawFloor(px,py,x,y,th){
+  let a=th.floorA, b=th.floorB;
+  if(player.map==='street'){                 // suburb → city ground morph as you ride east
+    const t=Math.max(0,Math.min(1,(x-12)/14));
+    a=lerpHex('#3f6b3a','#3a3f47',t); b=lerpHex('#457a3f','#33383f',t);
+  }
+  ctx.fillStyle=((x+y)%2===0)?a:b; ctx.fillRect(px,py,TILE,TILE);
+}
+function drawWall(px,py,x,y,th,g){ ctx.fillStyle=th.wall; ctx.fillRect(px,py,TILE,TILE);
+  const above=g[y-1]&&g[y-1][x]; if(above&&above!=='#'){ ctx.fillStyle=th.wallTop; ctx.fillRect(px,py,TILE,7); }
+  ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fillRect(px,py+TILE-4,TILE,4); }
+function r(px,py,w,h,c){ ctx.fillStyle=c; ctx.fillRect(px,py,w,h); }
+
+function drawTile(ch,px,py,th,x,y){
+  switch(ch){
+    case 'c': r(px+2,py+2,TILE-4,TILE-4,th.accent); r(px+6,py+6,TILE-12,TILE-12,'rgba(255,255,255,.12)'); break;
+    case 'd': r(px+5,py+2,TILE-10,TILE-4,'#5a3d24'); r(px+7,py+4,TILE-14,TILE-8,'#3a2818'); r(px+TILE-11,py+14,3,3,'#f0c04a'); break;
+    case 's': for(let i=0;i<4;i++){ r(px+2,py+2+i*7,TILE-4,5,i%2?'#2a475e':'#39607e'); } r(px+2,py+2,TILE-4,2,'#66c0f4'); break;
+    case 'r': r(px+8,py+8,16,14,'#26313a'); r(px+8,py+6,16,4,'#3a4a5a'); break;
+    case 'p': r(px+1,py+16,TILE-2,14,'#3a2a1a'); r(px+6,py+4,20,15,'#111'); r(px+8,py+6,16,11,'#1e5fa0'); r(px+9,py+7,5,3,'#66c0f4'); r(px+9,py+11,10,2,'#3f92c4'); break;
+    case 'w': r(px+3,py+2,TILE-6,TILE-4,'#5a3d24'); ctx.strokeStyle='#3a2818'; ctx.lineWidth=2; ctx.strokeRect(px+4,py+3,(TILE-8)/2,TILE-6); ctx.strokeRect(px+4+(TILE-8)/2,py+3,(TILE-8)/2,TILE-6); r(px+4+(TILE-8)/2-2,py+14,2,5,'#c9a875'); r(px+4+(TILE-8)/2+2,py+14,2,5,'#c9a875'); break;
+    case 'b': r(px,py+4,TILE,TILE-6,'#c94f7c'); r(px+2,py+2,TILE-4,10,'#eef2f6'); r(px+2,py+6,TILE-4,TILE-10,'#e05a8a'); break;
+    case '=': r(px,py+8,TILE,TILE-10,'#2a475e'); r(px,py+8,TILE,4,'#66c0f4'); r(px+2,py+14,TILE-4,TILE-18,'#1b2838'); break;
+    case '~': r(px+13,py+16,6,10,'#5a3d24'); ctx.fillStyle='#3e8f4f'; ctx.beginPath(); ctx.arc(px+16,py+11,9,0,7); ctx.fill(); r(px+13,py+8,6,4,'#57b06a'); break;
+    case 'n': r(px+4,py+14,TILE-8,5,'#8a6f57'); r(px+6,py+18,3,7,'#5a3d24'); r(px+TILE-9,py+18,3,7,'#5a3d24'); r(px+4,py+9,TILE-8,4,'#a3866a'); break;
+    case 'H': r(px+9,py+8,14,20,'rgba(120,200,220,.35)'); ctx.fillStyle='#7bbf3a'; ctx.beginPath(); ctx.arc(px+16,py+20,5,0,7); ctx.fill(); r(px+12,py+16,3,3,'#5a9f2a'); r(px+19,py+16,3,3,'#5a9f2a'); r(px+8,py+6,16,3,'#39607e'); break;
+    case 't': r(px+8,py+16,16,10,'#f2e6d0'); r(px+8,py+12,16,5,'#c98da0'); ctx.fillStyle='#e05a4f'; ctx.beginPath(); ctx.arc(px+16,py+11,3,0,7); ctx.fill(); r(px+15,py+6,2,4,'#7a4a20'); break;
+    case 'k': r(px+3,py+2,TILE-6,TILE-4,'#101820'); for(let i=0;i<5;i++) r(px+6,py+5+i*4,TILE-12,2,i%2?'#66c0f4':'#5c7e10'); break;
+    case '|': r(px+10,py,12,TILE-3,'#1b2838'); r(px+10,py,12,4,'#66c0f4'); r(px+13,py+6,6,4,'#e6eef5'); r(px+13,py+13,6,2,'#3f92c4'); break;
+    case '*': r(px+11,py+14,10,10,'#f0c04a'); r(px+13,py+6,6,9,'#f0c04a'); r(px+10,py+24,12,3,'#5a3d24'); break;
+    // --- new decorations ---
+    case 'M': r(px+8,py+2,16,28,'#0d1016'); r(px+10,py+5,10,18,'#05070a'); r(px+12,py+7,6,4,'#66c0f4'); r(px+12,py+12,6,4,'#a1cd44'); r(px+12,py+17,6,4,'#e05a4f'); r(px+8,py+2,16,2,'#2a3b4d'); break;
+    case 'L': r(px+6,py+2,20,26,'#171a10'); r(px+6,py+2,20,3,'#e07a1a'); ctx.strokeStyle='#f0902a'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(px+11,py+9); ctx.lineTo(px+20,py+24); ctx.moveTo(px+16,py+16); ctx.lineTo(px+11,py+24); ctx.stroke(); break;
+    case 'X': r(px+4,py+6,24,20,'#2a2018'); ctx.strokeStyle='#d8531a'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(px+9,py+22); ctx.lineTo(px+20,py+10); ctx.lineTo(px+24,py+12); ctx.stroke(); break;
+    case 'Q': r(px+6,py+6,20,20,'#c9cdd2'); ctx.strokeStyle='#8a9099'; ctx.lineWidth=2; ctx.strokeRect(px+6,py+6,20,20); r(px+11,py+11,10,10,'#e0e4e8'); ctx.fillStyle='#e05a8a'; ctx.beginPath(); ctx.arc(px+14,py+15,1.6,0,7); ctx.arc(px+18,py+15,1.6,0,7); ctx.moveTo(px+12.6,py+16); ctx.lineTo(px+16,py+20); ctx.lineTo(px+19.4,py+16); ctx.fill(); break;
+    case 'U': r(px+11,py+6,10,16,'#e8ecef'); r(px+13,py+22,2,6,'#c9cdd2'); r(px+17,py+22,2,6,'#c9cdd2'); r(px+9,py+9,4,8,'#d0d4d8'); r(px+19,py+9,4,8,'#d0d4d8'); ctx.fillStyle='rgba(224,90,79,.4)'; ctx.beginPath(); ctx.arc(px+16,py+12,4,0,7); ctx.fill(); ctx.fillStyle='#e05a4f'; ctx.beginPath(); ctx.arc(px+16,py+12,2.3,0,7); ctx.fill(); break;
+    case 'O': { const col=((x+y)%2===0)?'#4aa3ff':'#ff8a3a'; ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(px+16,py+22,11,6,0,0,7); ctx.stroke(); ctx.globalAlpha=.32; ctx.fillStyle=col; ctx.beginPath(); ctx.ellipse(px+16,py+22,9,4.5,0,0,7); ctx.fill(); ctx.restore(); break; }
+    case 'A': r(px+6,py+2,20,28,'#141822'); r(px+8,py+5,16,10,'#05070a'); r(px+10,py+7,12,6,'#2a6cc0'); r(px+11,py+8,3,2,'#a1cd44'); r(px+16,py+9,3,2,'#e05a4f'); r(px+8,py+17,16,3,'#e0902a'); ctx.fillStyle='#e05a4f'; ctx.beginPath(); ctx.arc(px+13,py+23,2,0,7); ctx.fill(); r(px+17,py+22,2,4,'#66c0f4'); r(px+6,py+2,20,2,'#66c0f4'); break;
+    case 'F': r(px+2,py+12,28,14,'#2a475e'); r(px+2,py+8,28,8,'#39607e'); r(px+2,py+12,5,12,'#39607e'); r(px+25,py+12,5,12,'#39607e'); break;
+    case 'W': r(px+2,py+3,28,22,'#eef2f6'); ctx.strokeStyle='#3f92c4'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(px+6,py+9); ctx.lineTo(px+16,py+9); ctx.moveTo(px+6,py+13); ctx.lineTo(px+22,py+13); ctx.moveTo(px+6,py+17); ctx.lineTo(px+13,py+17); ctx.stroke(); ctx.strokeStyle='#e05a4f'; ctx.beginPath(); ctx.moveTo(px+18,py+16); ctx.lineTo(px+24,py+21); ctx.stroke(); break;
+    case 'N': r(px+3,py+8,26,16,'#0a1420'); ctx.fillStyle='#66c0f4'; ctx.beginPath(); ctx.arc(px+16,py+16,7,0,7); ctx.fill(); ctx.fillStyle='#0a1420'; ctx.beginPath(); ctx.arc(px+16,py+16,4,0,7); ctx.fill(); r(px+16,py+15,9,2,'#66c0f4'); break;
+    // --- downtown Bellevue ---
+    case 'Y': {
+      const G=curMap().grid, above=(G[y-1]&&G[y-1][x])||'#';
+      const tints=['#3a4657','#313d4d','#434f60','#2c3644','#3d4a5b'];   // distinct concrete/steel buildings
+      const base=tints[Math.floor(x/3)%tints.length];
+      r(px,py,TILE,TILE,base);
+      if(x%3===0) r(px,py,2,TILE,'#12181f');                            // dark seam between buildings
+      if(above==='#'){                                                  // this is a rooftop
+        r(px,py,TILE,6,'#20272f'); r(px,py,TILE,2,'#48566a');           // parapet cap
+        if(Math.floor(x/3)%2===0) r(px+6,py+1,6,4,'#2a3340');          // rooftop AC unit
+      } else {
+        r(px,py,TILE,2,'#4a5a6e');                                      // floor slab line
+      }
+      const wy0=(above==='#')?py+8:py+3;
+      for(let wy=wy0; wy<py+TILE-2; wy+=7) for(let wx=px+4; wx<px+TILE-3; wx+=8){
+        ctx.fillStyle=(((wx*7+wy*13)%19)<4)?'#f0d488':'#7ea6cc'; ctx.fillRect(wx,wy,5,4);
+      }
+      break; }
+    case 'R': r(px,py,TILE,TILE,'#2f333a'); break;
+    case 'y': r(px,py,TILE,TILE,'#2f333a'); r(px+8,py+14,16,4,'#c9a13a'); break;
+    case 'x': r(px,py,TILE,TILE,'#2f333a'); for(let i=0;i<4;i++) r(px+2+i*8,py,4,TILE,'#c7ccd2'); break;
+    case 'i': r(px+15,py+6,2,22,'#20242c'); r(px+11,py+3,10,4,'#2a2e35'); ctx.fillStyle='rgba(240,205,110,.9)'; ctx.beginPath(); ctx.arc(px+16,py+6,4,0,7); ctx.fill(); break;
+    case 'v': { const body=((x+y)%2)?'#8a3a3a':'#345a8a'; r(px+4,py+6,24,20,body); r(px+4,py+6,24,2,'rgba(255,255,255,.18)'); r(px+7,py+9,18,6,'#1b2838'); r(px+7,py+18,18,5,'#20242c'); r(px+3,py+9,2,4,'#111'); r(px+27,py+9,2,4,'#111'); break; }
+    case 'j': { const roofs=['#8a4a3a','#5a6a8a','#6a5a3a','#4a7a5a']; const roof=roofs[(x*3+y)%4];
+      r(px+3,py+13,26,15,'#cbba9c');                                   // house body
+      ctx.fillStyle=roof; ctx.beginPath(); ctx.moveTo(px+1,py+14); ctx.lineTo(px+16,py+3); ctx.lineTo(px+31,py+14); ctx.closePath(); ctx.fill(); // roof
+      r(px+13,py+19,6,9,'#5a3d24');                                    // door
+      r(px+6,py+16,5,5,'#8fb7d6'); r(px+21,py+16,5,5,'#8fb7d6'); break; } // windows
+    case 'm': r(px+15,py+15,2,11,'#4a4a4a'); r(px+11,py+9,10,7,'#3f6aa0'); r(px+11,py+9,2,7,'#2c5386'); r(px+18,py+11,2,2,'#c9a13a'); break;
+    default: r(px+6,py+6,20,20,'#334');
+  }
+}
+
+/* ---------- character sprites ---------- */
+function bob(moving,frame){ return moving?(Math.floor(frame)%2?1:0):0; }
+function drawPerson(sx,sy,dir,pal,moving,frame,scale){
+  scale=scale||1; const U=v=>Math.round(v*scale); const b=bob(moving,frame);
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(sx, sy+U(13), U(9), U(3), 0,0,7); ctx.fill();
+  const legY=sy+U(6);
+  r(sx-U(5), legY-b*scale, U(4), U(7)+b*scale, pal.pants);
+  r(sx+U(1), legY+b*scale, U(4), U(7)-b*scale, pal.pants);
+  r(sx-U(6), sy-U(4)-b*scale, U(12), U(11), pal.shirt);
+  r(sx-U(6), sy-U(14)-b*scale, U(12), U(11), pal.skin);
+  const hy=sy-U(15)-b*scale;
+  if(dir==='up'){ r(sx-U(6), hy, U(12), U(9), pal.hair); }
+  else { r(sx-U(6), hy, U(12), U(5), pal.hair); r(sx-U(6), hy, U(3), U(9), pal.hair); r(sx+U(3), hy, U(3), U(9), pal.hair); }
+  if(pal.hat){
+    r(sx-U(6), hy-U(1), U(12), U(5), pal.hat);
+    if(dir==='down')      r(sx-U(7), hy+U(3), U(14), U(2), pal.hat);
+    else if(dir==='up')   r(sx-U(6), hy-U(3), U(12), U(2), pal.hat);
+    else if(dir==='left') r(sx-U(11), hy+U(1), U(6), U(2), pal.hat);
+    else                  r(sx+U(5), hy+U(1), U(6), U(2), pal.hat);
+  }
+  const ey=sy-U(8)-b*scale;
+  if(dir==='down'){ r(sx-U(3),ey,U(2),U(2),'#20242c'); r(sx+U(1),ey,U(2),U(2),'#20242c'); }
+  else if(dir==='left'){ r(sx-U(4),ey,U(2),U(2),'#20242c'); }
+  else if(dir==='right'){ r(sx+U(2),ey,U(2),U(2),'#20242c'); }
+  if(pal.glasses && dir!=='up'){
+    const gy=ey-Math.max(1,Math.round(scale));
+    if(dir==='down'){ r(sx-U(4),gy,U(9),U(1),'#15181e'); r(sx-U(4),ey,U(3),U(2),'rgba(200,225,245,.5)'); r(sx+U(1),ey,U(3),U(2),'rgba(200,225,245,.5)'); }
+    else if(dir==='left'){ r(sx-U(5),gy,U(5),U(1),'#15181e'); r(sx-U(4),ey,U(3),U(2),'rgba(200,225,245,.5)'); }
+    else { r(sx,gy,U(5),U(1),'#15181e'); r(sx+U(1),ey,U(3),U(2),'rgba(200,225,245,.5)'); }
+  }
+  if(pal.beard && dir==='down'){ r(sx-U(2),sy-U(4)-b*scale,U(4),U(3),pal.hair); }
+}
+// Gabe — long grey-blond hair, full white beard, black rectangular glasses,
+// white collared shirt, and a big wide torso for that final-boss presence.
+function paintGabe(c,sx,sy,s){
+  const U=v=>Math.round(v*s);
+  const rr=(x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(x,y,w,h); };
+  // trousers
+  rr(sx-U(8),sy+U(8),U(7),U(11),'#2b2f36'); rr(sx+U(1),sy+U(8),U(7),U(11),'#2b2f36');
+  // long grey-blond hair behind the head (frames down to the jaw)
+  rr(sx-U(11),sy-U(22),U(22),U(20),'#8f8676');
+  rr(sx-U(11),sy-U(22),U(4),U(20),'#847b6c'); rr(sx+U(7),sy-U(22),U(4),U(20),'#847b6c');
+  // white collared shirt — big torso keeps the boss presence
+  rr(sx-U(13),sy-U(6),U(26),U(18),'#e9e9e5');
+  rr(sx-U(13),sy-U(6),U(3),U(18),'#d6d6d1'); rr(sx+U(10),sy-U(6),U(3),U(18),'#deded9');
+  c.strokeStyle='#c9c9c3'; c.lineWidth=Math.max(1,U(0.6)); c.strokeRect(sx+U(3),sy+U(2),U(7),U(7)); // pocket
+  // open collar: skin V + white flaps
+  c.fillStyle='#e0b394'; c.beginPath(); c.moveTo(sx-U(4),sy-U(6)); c.lineTo(sx+U(4),sy-U(6)); c.lineTo(sx,sy-U(1)); c.closePath(); c.fill();
+  c.fillStyle='#f2f2ee';
+  c.beginPath(); c.moveTo(sx-U(6),sy-U(6)); c.lineTo(sx-U(1),sy-U(6)); c.lineTo(sx-U(3),sy-U(1)); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(sx+U(6),sy-U(6)); c.lineTo(sx+U(1),sy-U(6)); c.lineTo(sx+U(3),sy-U(1)); c.closePath(); c.fill();
+  // neck + head
+  rr(sx-U(4),sy-U(8),U(8),U(3),'#e0b394');
+  rr(sx-U(9),sy-U(20),U(18),U(16),'#e8c0a0');
+  // hair on top with a centre part
+  rr(sx-U(9),sy-U(21),U(18),U(4),'#9a917f'); rr(sx-U(1),sy-U(21),U(2),U(3),'#e8c0a0');
+  // full white beard
+  c.fillStyle='#dcd8ce';
+  c.beginPath(); c.moveTo(sx-U(9),sy-U(11)); c.lineTo(sx+U(9),sy-U(11)); c.lineTo(sx+U(8),sy-U(2)); c.lineTo(sx,sy+U(4)); c.lineTo(sx-U(8),sy-U(2)); c.closePath(); c.fill();
+  rr(sx-U(9),sy-U(11),U(18),U(3),'#dcd8ce');            // moustache
+  rr(sx-U(3),sy-U(9),U(6),U(2),'#c6b3a3');              // mouth line
+  // black rectangular glasses
+  rr(sx-U(8),sy-U(15),U(7),U(5),'#161616'); rr(sx-U(7),sy-U(14),U(5),U(3),'rgba(150,180,205,.5)');
+  rr(sx+U(1),sy-U(15),U(7),U(5),'#161616'); rr(sx+U(2),sy-U(14),U(5),U(3),'rgba(150,180,205,.5)');
+  rr(sx-U(1),sy-U(14),U(2),U(2),'#161616');
+  // eyes + a stern brow
+  rr(sx-U(5),sy-U(13),U(2),U(2),'#20242c'); rr(sx+U(3),sy-U(13),U(2),U(2),'#20242c');
+  rr(sx-U(7),sy-U(16),U(14),U(1),'#7a7064');
+}
+function drawGabe(sx,sy){
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(sx,sy+18,15,4,0,0,7); ctx.fill();
+  paintGabe(ctx,sx,sy,1);
+}
+function drawEntity(n){
+  const sx=n.px-cam.x, sy=n.py-cam.y;
+  if(n.type==='gabe'){ drawGabe(sx,sy); return; }
+  drawPerson(sx,sy,n.dir,n.pal,n.moving,n.frame,1);
+  if(n.name && n.name.includes('★')){ ctx.fillStyle='#f0c04a'; ctx.font='10px sans-serif'; ctx.textAlign='center'; ctx.fillText('★',sx,sy-20); ctx.textAlign='left'; }
+}
+function drawPlayer(){
+  const sx=player.x-cam.x, sy=player.y-cam.y;
+  if(curMap().bike){ ctx.strokeStyle='#20242c'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(sx-8,sy+13,5,0,7); ctx.arc(sx+8,sy+13,5,0,7); ctx.stroke(); r(sx-1,sy+2,2,11,'#66c0f4'); }
+  drawPerson(sx,sy,player.dir,player.pal,player.moving,player.frame,1);
+}
+function drawHint(m){
+  const f=frontTile();
+  const hit = npcAtTile(m,f.x,f.y) || m.interacts[f.x+','+f.y];
+  if(hit && state==='play'){ const sx=f.x*TILE+16-cam.x, sy=f.y*TILE-cam.y-2;
+    ctx.fillStyle='#66c0f4'; ctx.font='bold 12px sans-serif'; ctx.textAlign='center'; ctx.fillText('▲', sx, sy + (Math.sin(Date.now()/200)*2)); ctx.textAlign='left'; }
+}
+function frontTile(){
+  const tx=Math.floor(player.x/TILE), ty=Math.floor(player.y/TILE);
+  if(player.dir==='up') return {x:tx,y:ty-1};
+  if(player.dir==='down') return {x:tx,y:ty+1};
+  if(player.dir==='left') return {x:tx-1,y:ty};
+  return {x:tx+1,y:ty};
+}
+
+/* =========================================================================
+   INTERACTION
+   ========================================================================= */
+function interact(){
+  if(state!=='play') return;
+  const f=frontTile(), m=curMap();
+  const n=npcAtTile(m,f.x,f.y);
+  if(n){ faceToward(n); const opp={up:'down',down:'up',left:'right',right:'left'}; n.dir=opp[player.dir];
+    if(n.type==='gabe'){ if(flags.defeated){ say(n.name,"Welcome aboard. Now go make some great deals."); } else { gabeEncounter(n); } beep(600,.05); return; }
+    talkNPC(n); beep(600,.05); return; }
+  const fn=m.interacts[f.x+','+f.y];
+  if(fn){ fn(); beep(600,.05); }
+}
+function faceToward(n){
+  const nx=Math.floor(n.px/TILE), ny=Math.floor(n.py/TILE);
+  const dx=nx-Math.floor(player.x/TILE), dy=ny-Math.floor(player.y/TILE);
+  if(Math.abs(dx)>Math.abs(dy)) player.dir=dx>0?'right':'left'; else player.dir=dy>0?'down':'up';
+}
+function talkNPC(n){ sayLines(n.name, n.lines, n.onEnd); }
+
+/* ---------- dialogue ---------- */
+let dq=[], dName='', dDone=null, typeTarget='', typed='', typing=false, typeTimer=null;
+function say(name,text,done){ sayLines(name,[text],done); }
+function sayLines(name,lines,done){ state='dialogue'; dName=name; dq=[...lines]; dDone=done||null; el('dialogue').classList.add('show'); nextPage(); }
+function nextPage(){
+  if(dq.length===0){ el('dialogue').classList.remove('show'); state='play'; const cb=dDone; dDone=null; if(cb) cb(); return; }
+  el('dname').textContent=dName; typeTarget=dq.shift(); typed=''; typing=true; el('dmore').style.visibility='hidden';
+  clearInterval(typeTimer);
+  typeTimer=setInterval(()=>{
+    if(typed.length<typeTarget.length){ typed=typeTarget.slice(0,typed.length+1); el('dtext').textContent=typed; if(typed.length%2===0) beep(320+Math.random()*80,.012,'square',.02); }
+    else { typing=false; clearInterval(typeTimer); el('dmore').style.visibility='visible'; }
+  },18);
+}
+function advanceDialogue(){
+  if(typing){ typing=false; clearInterval(typeTimer); typed=typeTarget; el('dtext').textContent=typed; el('dmore').style.visibility='visible'; return; }
+  beep(500,.04); nextPage();
+}
+el('dbox').addEventListener('click',()=>{ if(state==='dialogue') advanceDialogue(); });
+
+/* ---------- bedroom actions ---------- */
+function getDressed(){
+  if(flags.dressed){ say("Wardrobe","You're already dressed sharp. Very BizDev of you."); return; }
+  flags.dressed=true; player.pal=PLAYER;
+  say("Wardrobe","You swap the pajamas for interview-ready clothes. Confidence +10. Now — check your PC, then head out.");
+}
+function openProfile(){ flags.pcChecked=true; renderProfile(); state='profile'; el('profile').classList.add('show'); beep(660,.06); }
+
+/* ---------- profile ---------- */
+function renderProfile(){
+  el('pf-name').textContent=RESUME.name; el('pf-role').textContent=RESUME.role;
+  const a=el('avatarCanvas'), a2=a.getContext('2d'); a2.imageSmoothingEnabled=false;
+  a2.clearRect(0,0,32,32); a2.fillStyle='#1b2838'; a2.fillRect(0,0,32,32); drawAvatarTo(a2,16,20,PLAYER);
+  const skills=RESUME.skills.map(s=>`<div class="skillrow"><span>${s.name}</span><span style="color:var(--blue)">${s.lvl}</span></div><div class="skilltrack"><div class="skillfill" style="width:${s.lvl}%"></div></div>`).join('');
+  const xp=RESUME.experience.map(e=>`<div class="xp"><div class="t">${e.t}</div><div class="m">${e.m}</div><div class="d">${e.d}</div></div>`).join('');
+  const edu=RESUME.education.map(e=>`<li>${e}</li>`).join('');
+  const why=RESUME.why.map(w=>`<li>${w}</li>`).join('');
+  const contact=RESUME.contact.map(c=>`<li>${c}</li>`).join('');
+  el('pf-grid').innerHTML=`
+    <div class="pcard"><h3>▸ Skill Tree</h3>${skills}</div>
+    <div class="pcard"><h3>▸ Quest Log · Experience</h3>${xp}</div>
+    <div class="pcard"><h3>▸ Education & Training</h3><ul>${edu}</ul></div>
+    <div class="pcard"><h3>▸ Why Valve</h3><ul>${why}</ul></div>
+    <div class="pcard" style="grid-column:1/-1"><h3>▸ Contact</h3><ul>${contact}</ul></div>`;
+}
+function drawAvatarTo(c,sx,sy,pal){
+  c.save();
+  c.fillStyle=pal.pants; c.fillRect(sx-5,sy+2,4,7); c.fillRect(sx+1,sy+2,4,7);
+  c.fillStyle=pal.shirt; c.fillRect(sx-6,sy-4,12,9);
+  c.fillStyle=pal.skin; c.fillRect(sx-6,sy-14,12,11);
+  c.fillStyle=pal.hair; c.fillRect(sx-6,sy-15,12,5); c.fillRect(sx-6,sy-15,3,9); c.fillRect(sx+3,sy-15,3,9);
+  if(pal.hat){ c.fillStyle=pal.hat; c.fillRect(sx-6,sy-16,12,5); c.fillRect(sx-7,sy-12,14,2); }
+  c.fillStyle='#20242c'; c.fillRect(sx-3,sy-8,2,2); c.fillRect(sx+1,sy-8,2,2);
+  c.restore();
+}
+
+/* =========================================================================
+   GYM-LEADER ENCOUNTER
+   ========================================================================= */
+const vsPCtx=el('vsPlayer').getContext('2d'); vsPCtx.imageSmoothingEnabled=false;
+const vsGCtx=el('vsGabe').getContext('2d'); vsGCtx.imageSmoothingEnabled=false;
+function flashScreen(cb){ const f=el('flash'); f.style.opacity='1'; setTimeout(()=>{ f.style.opacity='0'; },130); if(cb) setTimeout(cb,130); }
+function drawFighter(c,sx,sy,s,who){
+  c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(sx,sy+16*s,12*s,4*s,0,0,7); c.fill();
+  if(who==='gabe'){
+    paintGabe(c,sx,sy,s);
+  } else {
+    const p=PLAYER;
+    c.fillStyle=p.pants; c.fillRect(sx-5*s,sy+2*s,4*s,9*s); c.fillRect(sx+1*s,sy+2*s,4*s,9*s);
+    c.fillStyle=p.shirt; c.fillRect(sx-6*s,sy-5*s,12*s,10*s);
+    c.fillStyle=p.skin; c.fillRect(sx-6*s,sy-15*s,12*s,11*s);
+    c.fillStyle=p.hair; c.fillRect(sx-6*s,sy-16*s,12*s,5*s); c.fillRect(sx-6*s,sy-16*s,3*s,10*s); c.fillRect(sx+3*s,sy-16*s,3*s,10*s);
+    if(p.hat){ c.fillStyle=p.hat; c.fillRect(sx-6*s,sy-17*s,12*s,6*s); c.fillRect(sx-7*s,sy-12*s,14*s,2*s); }
+    c.fillStyle='#20242c'; c.fillRect(sx-3*s,sy-9*s,2*s,2*s); c.fillRect(sx+1*s,sy-9*s,2*s,2*s);
+  }
+}
+function gabeEncounter(n){
+  state='cutscene'; player.dir='up';
+  exBubble={x:Math.floor(n.px/TILE),y:Math.floor(n.py/TILE),until:performance.now()+900};
+  beep(880,.09,'square'); setTimeout(()=>beep(1245,.11,'square'),120);
+  startMusic('battle');
+  setTimeout(()=>{ flashScreen(()=>{ sayLines("Gabe Newell",[
+    "...So you're the one who biked all the way across town.",
+    "*He sets down his controller and rises from the chair.*",
+    "Most candidates send a résumé. You built an entire game to reach me.",
+    "I'm the last interview you'll face today. Think of me as the Gym Leader of Business Development.",
+    "Show me you truly understand this platform — and the offer is yours.",
+    "Let's begin." ], showVS); }); }, 950);
+}
+function showVS(){
+  state='vs';
+  vsPCtx.clearRect(0,0,64,64); drawFighter(vsPCtx,32,40,1.5,'player');
+  vsGCtx.clearRect(0,0,64,64); drawFighter(vsGCtx,32,40,1.5,'gabe');
+  el('vsPlayerName').textContent = RESUME.name || 'YOU';
+  const v=el('vs'); v.classList.remove('go'); v.classList.add('show'); void v.offsetWidth; requestAnimationFrame(()=>v.classList.add('go'));
+  beep(523,.08,'square'); setTimeout(()=>beep(659,.08,'square'),180); setTimeout(()=>beep(880,.12,'square'),380);
+  setTimeout(()=>{ flashScreen(()=>{ v.classList.remove('show','go'); startBattle(); }); }, 2200);
+}
+
+/* =========================================================================
+   BATTLE — the interview (original questions)
+   ========================================================================= */
+const QUESTIONS=[
+  { q:"A mid-size studio wants to launch on Steam but is terrified nobody will see their game. What do you tell them?",
+    a:[
+      {t:"I'll get them guaranteed front-page featuring.",dmg:8,hit:22,f:"Careful — you can't promise featuring, and Gabe knows it."},
+      {t:"Build wishlists, run a Next Fest demo, then time a launch discount to trigger algorithmic visibility.",dmg:36,hit:6,f:"Exactly. Visibility is earned by the funnel, not handed out."},
+      {t:"Tell them to just buy ads somewhere else.",dmg:5,hit:20,f:"That's not a Steam strategy — that's a shrug."}
+    ]},
+  { q:"Why should a developer sell on Steam instead of going direct?",
+    a:[
+      {t:"Because everybody else is on Steam.",dmg:9,hit:18,f:"True, but that's not the value story."},
+      {t:"130M+ active players, plus Workshop, cloud saves, reviews, refunds, and the whole distribution stack handled.",dmg:36,hit:6,f:"That's the pitch — you're selling the platform, not the storefront."},
+      {t:"It's cheaper than doing it themselves.",dmg:7,hit:16,f:"After the 30% cut? He'll push back on that one."}
+    ]},
+  { q:"A big partner is furious about the 30% revenue share. Go.",
+    a:[
+      {t:"Take it or leave it — those are the terms.",dmg:6,hit:22,f:"Never burn a partner. That's a relationship gone."},
+      {t:"Quietly offer them a secret lower rate.",dmg:5,hit:24,f:"Special side-deals erode trust across every partner. No."},
+      {t:"Reframe the value — global payments, players, tooling — and note the tiered rates at revenue milestones.",dmg:36,hit:6,f:"That's it. Value plus the milestone tiers. Well handled."}
+    ]},
+  { q:"It's your first month in the role. What's your first move?",
+    a:[
+      {t:"Learn the partner pipeline, talk to developers, and hunt for under-served genres to build early wins.",dmg:36,hit:6,f:"A partner mindset. That's exactly how we operate here."},
+      {t:"Reorganize how everyone else does their deals.",dmg:6,hit:20,f:"Bold, and a great way to make zero friends in week one."},
+      {t:"Wait for someone to hand me a target list.",dmg:8,hit:18,f:"We don't hand out scripts here. You'd own it."}
+    ]},
+];
+let gabeHP=100, conf=100, qIdx=0, answerLock=false, briefed=false;
+function startBattle(){
+  briefed = flags.intel>0;                 // did you get Gordon's intel on the dev floor?
+  gabeHP = briefed?88:100;                 // arriving prepared takes a little edge off his skepticism
+  conf=100; qIdx=0; state='battle';
+  el('battle').classList.add('show'); updateBattleBars(); showQuestion();
+  if(briefed) el('bfeed').innerHTML="🔍 <b>You came prepared.</b> Gordon's tips are fresh — you feel steadier.";
+  startMusic('battle'); beep(300,.12,'sawtooth');
+}
+function updateBattleBars(){ el('gabeFill').style.width=Math.max(0,gabeHP)+'%'; el('gabeVal').textContent=Math.max(0,gabeHP)+' / 100'; el('confFill').style.width=Math.max(0,conf)+'%'; el('confVal').textContent=Math.max(0,conf)+' / 100'; }
+function showQuestion(){
+  const q=QUESTIONS[qIdx%QUESTIONS.length]; el('qtext').textContent='GABE: "'+q.q+'"'; el('bfeed').textContent='';
+  const box=el('answers'); box.innerHTML='';
+  q.a.forEach((ans,i)=>{ const b=document.createElement('button'); b.className='ans';
+    b.innerHTML=`<span class="n">${i+1}</span><span>${ans.t}</span>`; b.onclick=()=>answer(ans); box.appendChild(b); });
+}
+function answer(ans){
+  if(answerLock) return; answerLock=true;
+  gabeHP-=ans.dmg; conf-=briefed?Math.round(ans.hit*0.6):ans.hit; updateBattleBars();
+  beep(ans.dmg>20?720:200,.09, ans.dmg>20?'square':'sawtooth'); el('bfeed').textContent=ans.f;
+  setTimeout(()=>{ if(gabeHP<=0){ answerLock=false; winBattle(); return; } if(conf<=0){ answerLock=false; loseBattle(); return; } qIdx++; answerLock=false; showQuestion(); }, 1400);
+}
+function winBattle(){
+  el('battle').classList.remove('show'); flags.defeated=true; startMusic('victory');
+  sayLines("Gabe Newell",[
+    "...Huh.",
+    "You actually get it. The platform, the partners, all of it.",
+    "And you built a *game* to tell me that. That's the kind of thinking we want.",
+    "Welcome to Valve." ], endGame);
+}
+function loseBattle(){
+  el('battle').classList.remove('show'); state='cutscene';
+  sayLines("Gabe Newell",[
+    "Wrong. ...All of them, actually.",
+    "I admire the confidence. I really do. But no.",
+    "*Gabe calmly produces an Aperture Science Handheld Portal Device.*",
+    "Nothing personal. Security is expensive." ], launchPortal);
+}
+function launchPortal(){
+  state='cutscene'; portalFX={t:0,done:false};
+  beep(220,.12,'sawtooth'); setTimeout(()=>beep(140,.18,'sawtooth'),120);
+}
+function stepPortalFX(){
+  if(!portalFX||portalFX.done) return;
+  portalFX.t += 0.018;
+  if(portalFX.t>=1){ portalFX.done=true; flashScreen(portalLand); }
+}
+function drawPortalFX(){
+  if(!portalFX||portalFX.done) return;
+  const t=portalFX.t;
+  const ox=7*TILE+16-cam.x, oy=3*TILE+16-cam.y;              // launch point (in front of Gabe)
+  const pr=Math.min(1,t*4);
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,1-t); ctx.strokeStyle='#ff8a3a'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.ellipse(ox,oy+6,16*pr,8*pr,0,0,7); ctx.stroke();
+  ctx.globalAlpha=Math.max(0,.5-t*.5); ctx.fillStyle='#ff8a3a';
+  ctx.beginPath(); ctx.ellipse(ox,oy+6,14*pr,7*pr,0,0,7); ctx.fill();
+  ctx.restore();
+  const fx=ox+t*t*380, fy=oy-Math.sin(Math.min(1,t)*Math.PI)*150;
+  ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(fx,fy); ctx.stroke();
+  ctx.save(); ctx.translate(fx,fy); ctx.rotate(t*14); ctx.scale(1-t*0.5,1-t*0.5);
+  drawPerson(0,0,'down',player.pal,false,0,1); ctx.restore();
+}
+function portalLand(){
+  portalFX=null; state='cutscene';
+  // failing the interview portals you clean across town — back into your own bed. Do it all again.
+  fade(()=>{
+    flags.dressed=false; flags.pcChecked=false; flags.intel=0; flags.defeated=false;
+    rebuildMaps();
+    player.map='bedroom'; player.x=10*TILE+16; player.y=3*TILE+16; player.dir='down'; player.pal=PJ;
+    cam.x=0; cam.y=0; updateHUD(); startMusic('town');
+  }, ()=>{
+    beep(392,.1); setTimeout(()=>beep(330,.14),150);
+    sayLines("*GASP*",[
+      "You jolt awake in your own bed. Pajamas. Sunlight. Your apartment.",
+      "...A dream? Your aching back says no — Gabe portaled you clean across town, right back home.",
+      "Okay. Deep breath. Get dressed, check your PC, and make the trip again. For real this time." ],
+      ()=>{ state='play'; });
+  });
+}
+document.addEventListener('keydown',e=>{ if(state==='battle' && !answerLock){ const q=QUESTIONS[qIdx%QUESTIONS.length]; if(e.key>='1'&&e.key<='3'){ const idx=+e.key-1; if(q.a[idx]) answer(q.a[idx]); } } });
+
+/* ---------- end ---------- */
+function endGame(){
+  state='end'; el('end').classList.add('show');
+  el('endQuote').innerHTML=`<b>${RESUME.name}</b> biked across town, climbed three floors, and out-pitched Gabe Newell himself.<br><br>This whole thing was the résumé — built to <i>show</i> you how I work, not just tell you.`;
+  // recruiter call-to-action: clickable contact
+  const email=RESUME.contact.find(c=>c.includes('@'))||'';
+  const phoneRaw=(RESUME.contact.find(c=>/\d{3}[\s.\-]*\d{3}[\s.\-]*\d{4}/.test(c))||'').match(/\d{3}[\s.\-]*\d{3}[\s.\-]*\d{4}/);
+  const phone=phoneRaw?phoneRaw[0]:''; const tel=phone.replace(/[^\d+]/g,'');
+  const subj=encodeURIComponent("Half-Life: Full-Time — let's talk");
+  el('endCTA').innerHTML=`<div class="line">Impressed? Let's actually talk.</div><div class="row">`
+    + (email?`<a class="btn" href="mailto:${email}?subject=${subj}">✉ ${email}</a>`:'')
+    + (tel?`<a class="btn blue" href="tel:${tel}">☎ ${phone}</a>`:'')
+    + `</div>`;
+  beep(660,.1); setTimeout(()=>beep(880,.14),140); setTimeout(()=>beep(1046,.22),300);
+}
+
+/* =========================================================================
+   INPUT + LOOP
+   ========================================================================= */
+document.addEventListener('keydown',e=>{
+  const k=e.key;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k)) e.preventDefault();
+  keys[k]=true; if(k.length===1) keys[k.toLowerCase()]=true;
+  if(state==='dialogue' && (k===' '||k==='Enter'||k==='e')) advanceDialogue();
+  else if(state==='play' && (k===' '||k==='Enter'||k==='e')) interact();
+  else if(state==='title' && (k==='Enter'||k===' ')) startGame();
+  else if(state==='profile' && (k==='Escape'||k==='e'||k===' ')) closeProfile();
+});
+document.addEventListener('keyup',e=>{ keys[e.key]=false; if(e.key.length===1) keys[e.key.toLowerCase()]=false; });
+document.querySelectorAll('#touch [data-k]').forEach(b=>{
+  const k=b.getAttribute('data-k');
+  const dn=e=>{ e.preventDefault(); keys[k]=true; if(state==='play'&&k===' ') interact(); else if(state==='dialogue'&&k===' ') advanceDialogue(); };
+  const up=e=>{ e.preventDefault(); keys[k]=false; };
+  b.addEventListener('touchstart',dn,{passive:false}); b.addEventListener('touchend',up,{passive:false});
+  b.addEventListener('mousedown',dn); b.addEventListener('mouseup',up); b.addEventListener('mouseleave',up);
+});
+if('ontouchstart' in window){ el('touch').classList.add('show'); }
+el('startBtn').onclick=startGame;
+el('muteBtn').onclick=()=>{ muted=!muted; el('muteBtn').textContent=muted?'✕':'♪'; el('muteBtn').style.color=muted?'#e05a4f':''; if(musicGain) musicGain.gain.value=muted?0:0.5; };
+el('mapBtn').onclick=()=>{ if(state==='play') say("Objective", OBJ[player.map]); };
+el('closeProfile').onclick=closeProfile;
+el('viewResume').onclick=()=>{ renderProfile(); state='profile'; el('profile').classList.add('show'); };
+el('playAgain').onclick=resetGame;
+function closeProfile(){ el('profile').classList.remove('show'); if(state==='profile') state = el('end').classList.contains('show') ? 'end' : 'play'; }
+function startGame(){
+  el('title').classList.remove('show'); state='play'; stage.focus(); ensureAudio(); updateHUD(); startMusic('town');
+  setTimeout(()=>say("*BEEP BEEP BEEP*","Your alarm screams. Today's the day — your interview at Valve for the Business Development role. Get up, get dressed (wardrobe), and check your PC."),300);
+}
+function resetGame(){
+  flags.pcChecked=false; flags.dressed=false; flags.intel=0; flags.defeated=false;
+  portalFX=null; exBubble=null;
+  rebuildMaps();
+  player.map='bedroom'; player.x=7*TILE+16; player.y=3*TILE+16; player.dir='down'; player.pal=PJ;
+  ['end','profile','battle','dialogue','vs'].forEach(id=>el(id).classList.remove('show'));
+  state='play'; updateHUD(); startMusic('town');
+}
+function loop(){ update(); stepFade(); stepPortalFX(); draw(); requestAnimationFrame(loop); }
+loop(); updateHUD();
+</script>
